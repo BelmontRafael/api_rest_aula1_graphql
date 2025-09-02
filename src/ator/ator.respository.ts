@@ -1,16 +1,17 @@
 import { BadRequestException, Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { Ator } from './entities/ator.entity';
 import { Filme } from 'src/filme/entities/filme.entity';
-import { CreateAtorDto } from './dto/create-ator.dto';
-import { AtorDto } from './dto/ator.dto';
-import { UpdateAtorDto } from './dto/update-ator.dto';
 import { Sequelize } from 'sequelize-typescript';
+import { AtorType } from './type/ator.type';
+import { FilmeSummaryType } from 'src/filme/type/filme-summary.type';
+import { UpdateAtorInput } from './type/update-ator.input';
+import { AtorInput } from './type/ator.input';
 
 @Injectable()
 export class AtorRepository {
 	constructor(@Inject('SEQUELIZE') private sequelize: Sequelize) {}
 
-    async create(createAtorDto: CreateAtorDto): Promise<AtorDto> {
+    async create(createAtorDto: AtorInput): Promise<AtorType> {
         const transaction = await this.sequelize.transaction();
 
         try {
@@ -28,14 +29,14 @@ export class AtorRepository {
 
             await ator.reload({ include: [Filme], transaction });
             await transaction.commit();
-            return AtorDto.fromEntity(ator);
+            return this.mapToType(ator);
         } catch (error) {
             await transaction.rollback();
             throw new BadRequestException('Erro ao criar o ator.', error.message);
         }
     }
 
-    async update(id: number, updateAtorDto: UpdateAtorDto): Promise<AtorDto> {
+    async update(id: number, updateAtorDto: UpdateAtorInput): Promise<AtorType> {
         const ator = await this.findEntityById(id);
         const transaction = await this.sequelize.transaction();
 
@@ -48,24 +49,24 @@ export class AtorRepository {
 
             await transaction.commit();
             await ator.reload({ include: [Filme] });
-            return AtorDto.fromEntity(ator);
+            return this.mapToType(ator);
         } catch (error) {
             await transaction.rollback();
             throw new BadRequestException('Erro ao atualizar o ator.', error.message);
         }
     }
 
-    async findAll(): Promise<AtorDto[]> {
+    async findAll(): Promise<AtorType[]> {
         const atores = await Ator.findAll({
             include: [Filme],
             order: [['nome', 'ASC']],
         });
-        return atores.map(ator => AtorDto.fromEntity(ator));
+        return atores.map(ator => this.mapToType(ator));
     }
 
-    async findOne(id: number): Promise<AtorDto> {
+    async findOne(id: number): Promise<AtorType> {
         const ator = await this.findEntityById(id);
-        return AtorDto.fromEntity(ator);
+        return this.mapToType(ator);
     }
 
     async remove(id: number): Promise<void> {
@@ -93,5 +94,21 @@ export class AtorRepository {
             throw new NotFoundException(`Ator com ID ${id} não encontrado.`);
         }
         return ator;
+    }
+
+    private mapToType(ator: Ator): AtorType {
+        const filmes: FilmeSummaryType[] = (ator.filmes || []).map(filme => ({
+            id: filme.id,
+            nome: filme.nome,
+        }));
+
+        return {
+            id: ator.id,
+            nome: ator.nome,
+            data_nascimento: ator.data_nascimento 
+                ? new Date(ator.data_nascimento).toISOString().split('T')[0]
+                : null,
+            filmes: filmes,
+        }
     }
 }

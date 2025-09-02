@@ -1,0 +1,103 @@
+# ------------------------------------------------------
+# THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
+# ------------------------------------------------------
+
+type Ator {
+  data_nascimento: String
+  filmes: [FilmeSummary]
+  id: Int!
+  nome: String!
+}
+
+input AtorInput {
+  data_nascimento: String
+  filmesIds: [Int]
+  nome: String!
+}
+
+type AtorSummary {
+  id: Int!
+  nome: String!
+}
+
+type Filme {
+  ano_lancamento: Int!
+  atores: [AtorSummary]
+  generos: [Genero]
+  id: Int!
+  nome: String!
+  sinopse: String
+}
+
+input FilmeInput {
+  ano_lancamento: Int!
+
+  """Array de IDs de atores a serem associados"""
+  atoresIds: [Int]
+
+  """Array de IDs de gêneros a serem associados"""
+  generosIds: [Int]
+  nome: String!
+  sinopse: String
+}
+
+type FilmeSummary {
+  id: Int!
+  nome: String!
+}
+
+type Genero {
+  filmes: [FilmeSummary]
+  id: Int!
+  nome: String!
+}
+
+input GeneroInput {
+  nome: String!
+}
+
+type Mutation {
+  adicionarAtoresEmFilme(atorIds: [Int!]!, filmeId: Int!): Filme!
+  adicionarGenerosEmFilme(filmeId: Int!, generoIds: [Int!]!): Filme!
+  atualizarAtor(id: Int!, input: UpdateAtorInput!): Ator!
+  atualizarFilme(id: Int!, input: UpdateFilmeInput!): Filme!
+  atualizarGenero(id: Int!, input: UpdateGeneroInput!): Genero!
+  criarAtor(input: AtorInput!): Ator!
+  criarFilme(input: FilmeInput!): Filme!
+  criarGenero(input: GeneroInput!): Genero!
+  excluirAtor(id: Int!): Boolean!
+  excluirFilme(id: Int!): Boolean!
+  excluirGenero(id: Int!): Boolean!
+  removerAtorDeFilme(atorId: Int!, filmeId: Int!): Filme!
+}
+
+type Query {
+  ator(id: Int!): Ator!
+  atores: [Ator!]!
+  filme(id: Int!): Filme!
+  filmes: [Filme!]!
+  genero(id: Int!): Genero!
+  generos: [Genero!]!
+}
+
+input UpdateAtorInput {
+  data_nascimento: String
+  filmesIds: [Int!]
+  nome: String
+}
+
+input UpdateFilmeInput {
+  ano_lancamento: Int
+
+  """Array de IDs de atores a serem associados"""
+  atoresIds: [Int!]
+
+  """Array de IDs de gêneros a serem associados"""
+  generosIds: [Int!]
+  nome: String
+  sinopse: String
+}
+
+input UpdateGeneroInput {
+  nome: String
+}

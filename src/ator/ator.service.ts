@@ -1,10 +1,9 @@
 import { Injectable, BadRequestException } from '@nestjs/common';
 import { AtorRepository } from './ator.respository';
 import { FilmeRepository } from 'src/filme/filme.respository';
-import { CreateAtorDto } from './dto/create-ator.dto';
-import { UpdateAtorDto } from './dto/update-ator.dto';
-import { AtorDto } from './dto/ator.dto';
-
+import { AtorInput } from './type/ator.input';
+import { AtorType } from './type/ator.type';
+import { UpdateAtorInput } from './type/update-ator.input';
 
 @Injectable()
 export class AtorService {
@@ -13,20 +12,20 @@ export class AtorService {
         private readonly filmeRepository: FilmeRepository,
     ) {}
 
-    async create(createAtorDto: CreateAtorDto): Promise<AtorDto> {
+    async create(createAtorDto: AtorInput): Promise<AtorType> {
         await this.validarIds(createAtorDto.filmesIds);
         return this.atorRepository.create(createAtorDto);
     }
 
-    async findAll(): Promise<AtorDto[]> {
+    async findAll(): Promise<AtorType[]> {
         return this.atorRepository.findAll();
     }
 
-    async findOne(id: number): Promise<AtorDto> {
+    async findOne(id: number): Promise<AtorType> {
         return this.atorRepository.findOne(id);
     }
 
-    async update(id: number, updateAtorDto: UpdateAtorDto): Promise<AtorDto> {
+    async update(id: number, updateAtorDto: UpdateAtorInput): Promise<AtorType> {
         await this.validarIds(updateAtorDto.filmesIds);
         return this.atorRepository.update(id, updateAtorDto);
     }

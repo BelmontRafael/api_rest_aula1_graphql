@@ -1,11 +1,11 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { FilmeRepository } from './filme.respository';
 import { AtorRepository } from 'src/ator/ator.respository';
-import { CreateFilmeDto } from './dto/create-filme.dto';
-import { UpdateFilmeDto } from './dto/update-filme.dto';
-import { FilmeDto } from './dto/filme.dto';
-import { AtorSummaryDto } from 'src/ator/dto/ator-summary.dto';
 import { GeneroRepository } from 'src/genero/genero.repository';
+import { FilmeInput } from './type/filme.input';
+import { FilmeType } from './type/filme.type';
+import { UpdateFilmeInput } from './type/update-filme.input';
+import { AtorSummaryType } from 'src/ator/type/ator-summary.type';
 
 @Injectable()
 export class FilmeService {
@@ -15,21 +15,21 @@ export class FilmeService {
         private readonly generoRepository: GeneroRepository,
     ) {}
 
-    async create(createFilmeDto: CreateFilmeDto): Promise<FilmeDto> {
+    async create(createFilmeDto: FilmeInput): Promise<FilmeType> {
         await this.validarIds(createFilmeDto.atoresIds, createFilmeDto.generosIds);
         return this.filmeRepository.create(createFilmeDto);
     }
 
-    async findAll(): Promise<FilmeDto[]> {
+    async findAll(): Promise<FilmeType[]> {
         return this.filmeRepository.findAll();
     }
 
 
-    async findOne(id: number): Promise<FilmeDto> {
+    async findOne(id: number): Promise<FilmeType> {
         return this.filmeRepository.findOne(id);
     }
 
-    async update(id: number, updateFilmeDto: UpdateFilmeDto): Promise<FilmeDto> {
+    async update(id: number, updateFilmeDto: UpdateFilmeInput): Promise<FilmeType> {
         await this.validarIds(updateFilmeDto.atoresIds, updateFilmeDto.generosIds);
         return this.filmeRepository.update(id, updateFilmeDto);
     }
@@ -38,21 +38,42 @@ export class FilmeService {
         return this.filmeRepository.remove(id);
     }
 
-    async findActors(filmeId: number): Promise<AtorSummaryDto[]> {
+    async findActors(filmeId: number): Promise<AtorSummaryType[]> {
         return this.filmeRepository.findActors(filmeId);
   }
 
-    async addAtorAoFilme(filmeId: number, atorId: number): Promise<AtorSummaryDto[]> {
+  async adicionarAtoresEmFilme(filmeId: number, atorIds: number[]): Promise<FilmeType> {
+        const filme = await this.filmeRepository.findEntityById(filmeId);
+        
+        const uniqueAtorIds = [...new Set(atorIds)];
+        const count = await this.atorRepository.countByIds(uniqueAtorIds);
+        if (count !== uniqueAtorIds.length) {
+            throw new BadRequestException('Um ou mais IDs de atores são inválidos.');
+        }
+
+        const filmeAtualizado = await this.filmeRepository.addAtores(filme, uniqueAtorIds);
+        return this.filmeRepository.mapToType(filmeAtualizado);
+    }
+
+    async removerAtorDeFilme(filmeId: number, atorId: number): Promise<FilmeType> {
         const filme = await this.filmeRepository.findEntityById(filmeId);
         const ator = await this.atorRepository.findEntityById(atorId);
 
-        const atorJaExiste = filme.atores.some(atorExistente => atorExistente.id === ator.id);
-        if (atorJaExiste) {
-            throw new BadRequestException(`O ator '${ator.nome}' já faz parte do elenco do filme '${filme.nome}'.`);
+        const filmeAtualizado = await this.filmeRepository.removeAtor(filme, ator);
+        return this.filmeRepository.mapToType(filmeAtualizado);
+    }
+
+    async adicionarGenerosEmFilme(filmeId: number, generoIds: number[]): Promise<FilmeType> {
+        const filme = await this.filmeRepository.findEntityById(filmeId);
+        
+        const uniqueGeneroIds = [...new Set(generoIds)];
+        const count = await this.generoRepository.countByIds(uniqueGeneroIds);
+        if (count !== uniqueGeneroIds.length) {
+            throw new BadRequestException('Um ou mais IDs de gêneros são inválidos.');
         }
 
-        const filmeAtualizado = await this.filmeRepository.associarAtor(filme, ator);
-        return filmeAtualizado.atores.map(a => AtorSummaryDto.fromEntity(a));
+        const filmeAtualizado = await this.filmeRepository.addGeneros(filme, uniqueGeneroIds);
+        return this.filmeRepository.mapToType(filmeAtualizado);
     }
 
     private async validarIds(atoresIds?: number[], generosIds?: number[]): Promise<void> {
