@@ -9,7 +9,7 @@ export class AtorType {
   @Field()
   nome: string;
 
-  @Field({ nullable: true })
+  @Field(() => String,{ nullable: true })
   data_nascimento: string | null;
 
   @Field(() => [FilmeSummaryType], { nullable: 'itemsAndList' })

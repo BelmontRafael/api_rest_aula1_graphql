@@ -10,7 +10,7 @@ export class AtorInput {
   @MaxLength(255)
   nome: string;
 
-  @Field({ nullable: true })
+  @Field(() => String,{ nullable: true })
   @IsOptional()
   @IsDateString({}, { message: 'A data de nascimento deve estar no formato YYYY-MM-DD.' })
   data_nascimento?: string;

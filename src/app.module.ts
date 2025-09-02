@@ -5,10 +5,16 @@ import { GraphQLModule } from '@nestjs/graphql';
 import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
 import { join } from 'path';
 import { DatabaseModule } from './database/database.module';
+import { FilmeModule } from './filme/filme.module';
+import { AtorModule } from './ator/ator.module';
+import { GeneroModule } from './genero/genero.module';
 
 @Module({
   imports: [
     DatabaseModule,
+    FilmeModule,
+    AtorModule,
+    GeneroModule,
     GraphQLModule.forRoot<ApolloDriverConfig>({
       driver: ApolloDriver,
       autoSchemaFile: join(process.cwd(), 'src/schema.gql'),
